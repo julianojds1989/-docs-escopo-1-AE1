@@ -1,4 +1,5 @@
 1.	Dicionário de dados (versão 1)
+DADOS EXTRAIDOS EM: https://drive.google.com/drive/folders/1W_4SsAW8u5bvsaBoHhwInpUr72vES8yw
 Campo	Tipo esperado	Descrição	Origem (CSV/BD)	Regra de validação
 id_acidente	Inteiro	Identificador único do acidente	CSV	PK, não nulo
 data_ocorrencia	Data	Data do acidente	CSV	Não nulo, formato AAAA-MM-DD
