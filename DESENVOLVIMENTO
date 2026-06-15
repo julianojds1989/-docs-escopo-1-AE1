@@ -1,0 +1,44 @@
+1.	Dicionário de dados (versão 1)
+Campo	Tipo esperado	Descrição	Origem (CSV/BD)	Regra de validação
+id_acidente	Inteiro	Identificador único do acidente	CSV	PK, não nulo
+data_ocorrencia	Data	Data do acidente	CSV	Não nulo, formato AAAA-MM-DD
+hora_ocorrencia	Hora	Hora do acidente	CSV	00:00–23:59
+municipio	Texto	Município onde ocorreu	CSV / IBGE	Não nulo
+tipo_veiculo	Texto	Categoria do veículo envolvido	CSV	Domínio pré-definido
+vitimas_fatais	Inteiro	Número de vítimas fatais	CSV / DATASUS	≥ 0
+vitimas_nao_fatais	Inteiro	Número de vítimas não fatais	CSV / DATASUS	≥ 0
+condicao_climatica	Texto	Condição do clima no momento	CSV	Domínio pré-definido
+fonte_registro	Texto	Origem da informação (PRF, SEJUSP, etc.)	CSV	Não nulo
+
+2.	Modelo lógico (versão 1)
+A solução será estruturada em uma única planilha, onde cada linha corresponde a um acidente de trânsito registrado. Os campos definidos no dicionário de dados serão organizados como colunas da planilha.
+Descrição do modelo lógico:
+•	A planilha terá uma chave primária lógica: id_acidente, que identifica cada ocorrência.
+•	As demais colunas (data_ocorrencia, hora_ocorrencia, municipio, tipo_veiculo, vitimas_fatais, vitimas_nao_fatais, condicao_climatica, fonte_registro) representam atributos descritivos do acidente.
+•	Não haverá tabelas relacionadas, pois todas as informações estarão desnormalizadas em uma única estrutura tabular.
+•	Esse formato facilita a manipulação direta em ferramentas como Power BI e Excel
+
+3.	Plano de qualidade de dados (mín. 6 checagens)
+Duplicidade: verificar se há acidentes repetidos pelo mesmo id_acidente.
+Nulos: checar ausência de valores em campos obrigatórios (data, município, tipo de veículo).
+Domínio de valores: validar categorias pré-definidas (tipo de veículo, condição climática).
+Consistência temporal: garantir que datas não sejam futuras e horas estejam no intervalo válido.
+Faixas plausíveis: número de vítimas ≥ 0 e dentro de limites razoáveis.
+Coerência geográfica: municípios devem existir conforme base IBGE.
+4.	Plano de análise (EDA) e produto final
+Gráficos/Tabelas necessários:
+•	Evolução temporal dos acidentes (linha/coluna).
+•	Distribuição por tipo de veículo (pizza/barras).
+•	Mapa por município (mapa de calor).
+•	Taxa de acidentes por 100 mil habitantes (comparação regional).
+•	Relação entre condições climáticas e número de acidentes (barras agrupadas).
+Insights esperados:
+•	Identificação de municípios críticos.
+•	Padrões de horário e tipo de via.
+•	Evolução temporal dos acidentes.
+•	Impacto das condições climáticas.
+Wireframe do Dashboard (Power BI):
+•	Página 1: KPIs principais (taxa de acidentes, vítimas fatais/não fatais).
+•	Página 2: Distribuição por tipo de veículo e clima.
+•	Página 3: Mapa interativo por município.
+•	Página 4: Séries temporais e tendências.
