@@ -21,7 +21,7 @@ except Exception as e:
 
 # Query SQL fornecida
 sql_query = """
--- ACIDENTE TRANSITO MOTORISTA APP - VEICULOS --
+-- REGISTROS ACIDENTE TRANSITO GERAL - REG_VEIC--
 WITH base_filtrada AS (
     SELECT
         VOC.numero_ocorrencia,
@@ -35,7 +35,7 @@ WITH base_filtrada AS (
         VOC.cor_veiculo_descricao,
         VOC.tipo_veiculo_descricao,
         VOC.categoria_veiculo_descricao,
-        OCO.natureza_codigo, 
+      	OCO.natureza_codigo, 
         OCO.natureza_descricao,
         OCO.natureza_ind_consumado,
         OCO.natureza_consumado,
@@ -65,18 +65,20 @@ WITH base_filtrada AS (
         AND VOC.data_hora_fato >= '2018-01-01'
         AND VOC.tipo_veiculo_codigo NOT IN ('0400')
         AND OCO.natureza_codigo IN ('T00008','T00009')
-        AND OCO.ind_motorista_aplicativo = 'S'
+        --AND OCO.ind_motorista_aplicativo = 'S'
 ),
+
 marcada AS (
     SELECT
         *,
         ROW_NUMBER() OVER (PARTITION BY numero_ocorrencia ORDER BY data_hora_fato) AS ordem_ocorrencia
     FROM base_filtrada
 )
+
 SELECT
     numero_ocorrencia,
-    FORMAT(data_hora_fato, 'dd/MM/yy HH:mm:ss') AS data_fato,
-    DATEPART(HOUR, data_hora_fato) AS hora,
+    FROM_TIMESTAMP(data_hora_fato, 'dd/MM/yy HH:mm:ss') AS data_fato,
+    HOUR(data_hora_fato) AS hora,
     situacao_placa_descricao,
     motivo_apreensao_descricao,
     nome_proprietario,
@@ -98,17 +100,19 @@ SELECT
     nome_municipio,
     numero_latitude,
     numero_longitude,
-    REPLACE(CONVERT(VARCHAR, numero_latitude), '.', ',') AS local_latitude_formatado,
-    REPLACE(CONVERT(VARCHAR, numero_longitude), '.', ',') AS local_longitude_formatado,
+    REPLACE(CAST(numero_latitude AS STRING), '.', ',') AS local_latitude_formatado,
+    REPLACE(CAST(numero_longitude AS STRING), '.', ',') AS local_longitude_formatado,
     unidade_area_militar_nome,
     unidade_responsavel_registro_nome,
     unidade_responsavel_registro_nome_orgao,
     ind_transporte_aplicativo,
     ind_motorista_aplicativo,
+
     CASE 
         WHEN codigo_municipio IN (310350 , 310375 , 310980 , 311180 , 311260 , 311500 , 311580 , 312480 , 312790 , 312910 , 313070 , 313140 , 313420 , 314280 , 315280 , 315980 , 316960 , 317020)
             THEN '09 RPM'
     END AS RPM_2025,
+
     CASE 
         WHEN codigo_municipio IN (310350,310375,311500,312480,312790,313070,316960) THEN '53 BPM'
         WHEN codigo_municipio IN (310980,311180,311260,311580,312910,313140,313420,314280,315280,315980) THEN '54 BPM'
@@ -116,10 +120,13 @@ SELECT
         WHEN codigo_municipio = 317020 AND (unidade_area_militar_nome LIKE '17 BPM%' OR unidade_area_militar_nome LIKE '%/17 BPM%') AND (unidade_area_militar_nome NOT LIKE '%TM%') THEN '17 BPM'
         ELSE 'OUTROS' 
     END AS UEOP_2025,
+
     1 AS qtde_total_veiculos,
     CASE WHEN ordem_ocorrencia = 1 THEN 1 ELSE 0 END AS qtde_total_ocorrencias
+
 FROM marcada
 ORDER BY numero_ocorrencia;
+
 """
 
 # Executa a query e carrega os dados em um DataFrame
