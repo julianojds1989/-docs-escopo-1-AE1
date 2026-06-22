@@ -1,0 +1,105 @@
+-- REGISTROS ACIDENTE TRANSITO GERAL - REG_VEIC--
+WITH base_filtrada AS (
+    SELECT
+        VOC.numero_ocorrencia,
+        VOC.data_hora_fato,
+        VOC.situacao_placa_descricao,
+        VOC.motivo_apreensao_descricao,
+        VOC.nome_proprietario,
+        VOC.numero_placa,
+        VOC.marca_modelo_descricao,
+        VOC.numero_chassis,
+        VOC.cor_veiculo_descricao,
+        VOC.tipo_veiculo_descricao,
+        VOC.categoria_veiculo_descricao,
+      	OCO.natureza_codigo, 
+        OCO.natureza_descricao,
+        OCO.natureza_ind_consumado,
+        OCO.natureza_consumado,
+        OCO.tipo_logradouro_descricao,
+        OCO.logradouro_nome,
+        OCO.numero_endereco,
+        OCO.descricao_endereco,
+        OCO.nome_bairro,
+        OCO.nome_municipio,
+        OCO.numero_latitude,
+        OCO.numero_longitude,
+        OCO.unidade_area_militar_nome,
+        OCO.unidade_responsavel_registro_nome,
+        OCO.unidade_responsavel_registro_nome_orgao,
+        OCO.ind_transporte_aplicativo,
+        OCO.ind_motorista_aplicativo,
+        OCO.codigo_municipio
+    FROM db_bisp_reds_reporting.tb_veiculo_ocorrencia AS VOC
+    LEFT JOIN db_bisp_reds_reporting.tb_ocorrencia AS OCO
+        ON VOC.numero_ocorrencia = OCO.numero_ocorrencia
+    WHERE
+        OCO.codigo_municipio IN (
+            310350,310375,311500,312480,312790,313070,316960,
+            310980,311180,311260,311580,312910,313140,313420,
+            314280,315280,315980,317020
+        )
+        AND VOC.data_hora_fato >= '2018-01-01'
+        AND VOC.tipo_veiculo_codigo NOT IN ('0400')
+        AND OCO.natureza_codigo IN ('T00008','T00009')
+        --AND OCO.ind_motorista_aplicativo = 'S'
+),
+
+marcada AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (PARTITION BY numero_ocorrencia ORDER BY data_hora_fato) AS ordem_ocorrencia
+    FROM base_filtrada
+)
+
+SELECT
+    numero_ocorrencia,
+    FROM_TIMESTAMP(data_hora_fato, 'dd/MM/yy HH:mm:ss') AS data_fato,
+    HOUR(data_hora_fato) AS hora,
+    situacao_placa_descricao,
+    motivo_apreensao_descricao,
+    nome_proprietario,
+    numero_placa,
+    marca_modelo_descricao,
+    numero_chassis,
+    cor_veiculo_descricao,
+    tipo_veiculo_descricao,
+    categoria_veiculo_descricao,
+    natureza_codigo,
+    natureza_descricao,
+    natureza_ind_consumado,
+    natureza_consumado,
+    tipo_logradouro_descricao,
+    logradouro_nome,
+    numero_endereco,
+    descricao_endereco,
+    nome_bairro,
+    nome_municipio,
+    numero_latitude,
+    numero_longitude,
+    REPLACE(CAST(numero_latitude AS STRING), '.', ',') AS local_latitude_formatado,
+    REPLACE(CAST(numero_longitude AS STRING), '.', ',') AS local_longitude_formatado,
+    unidade_area_militar_nome,
+    unidade_responsavel_registro_nome,
+    unidade_responsavel_registro_nome_orgao,
+    ind_transporte_aplicativo,
+    ind_motorista_aplicativo,
+
+    CASE 
+        WHEN codigo_municipio IN (310350 , 310375 , 310980 , 311180 , 311260 , 311500 , 311580 , 312480 , 312790 , 312910 , 313070 , 313140 , 313420 , 314280 , 315280 , 315980 , 316960 , 317020)
+            THEN '09 RPM'
+    END AS RPM_2026,
+
+    CASE 
+        WHEN codigo_municipio IN (310350,310375,311500,312480,312790,313070,316960) THEN '53 BPM'
+        WHEN codigo_municipio IN (310980,311180,311260,311580,312910,313140,313420,314280,315280,315980) THEN '54 BPM'
+        WHEN codigo_municipio = 317020 AND (unidade_area_militar_nome LIKE '32 BPM%' OR unidade_area_militar_nome LIKE '%/32 BPM%') AND (unidade_area_militar_nome NOT LIKE '%TM%') THEN '32 BPM'
+        WHEN codigo_municipio = 317020 AND (unidade_area_militar_nome LIKE '17 BPM%' OR unidade_area_militar_nome LIKE '%/17 BPM%') AND (unidade_area_militar_nome NOT LIKE '%TM%') THEN '17 BPM'
+        ELSE 'OUTROS' 
+    END AS UEOP_2026,
+
+    1 AS qtde_total_veiculos,
+    CASE WHEN ordem_ocorrencia = 1 THEN 1 ELSE 0 END AS qtde_total_ocorrencias
+
+FROM marcada
+ORDER BY numero_ocorrencia;
